@@ -1,0 +1,22 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
+Resources: {% for item in lambda %}
+  LambdaErrorAlarm{{ lambda[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ lambda[loop.index0].LambdaName }}-LambdaErrors"
+      AlarmActions:
+        - {{ lambda[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: {{ lambda[loop.index0].LambdaName }}
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: '1'
+
+  {% endfor %}

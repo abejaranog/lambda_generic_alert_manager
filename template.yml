@@ -1,0 +1,101 @@
+Transform: "AWS::Serverless-2016-10-31"
+
+Parameters:
+  EnvironmentStackName:
+    Type: String
+    AllowedValues: [qa, prod]
+
+
+Resources:      
+  AlertManagerDeadLetterQueue:
+    Type: AWS::SQS::Queue
+  
+  AlertManagerTemplateS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
+
+  AlertManagerEventHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: "api"
+      Handler: "alerting.main"
+      Runtime: python3.8
+      MemorySize: 256
+      Timeout: 600
+      Events:
+        CheckAlarmsScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(30 minutes)
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt AlertManagerDeadLetterQueue.Arn
+      Environment:
+        Variables:
+          LOG_LEVEL: "INFO"
+          S3_TEAMS: "yopdev-teams"
+          TEMPLATE_S3: !Ref AlertManagerTemplateS3
+          # NEW_RELIC_ACCOUNT_ID: 902679 
+          # NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
+      Policies:
+        - Statement:
+          - Sid: SQSList
+            Effect: Allow
+            Action:
+            - sqs:ListQueues
+            - sqs:ListQueueTags
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+            - sqs:ListDeadLetterSourceQueues 
+            Resource: '*'
+          - Sid: CloudformationCreate
+            Effect: Allow
+            Action:
+            - cloudformation:CreateStack
+            - cloudformation:UpdateStack
+            Resource: 
+            - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/DLQ-alerting-stack/*'
+            - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Lambda-alerting-stack/*'
+          - Sid: CloudformationValidate
+            Effect: Allow
+            Action:
+            - cloudformation:ValidateTemplate
+            - cloudformation:ListStacks
+            - cloudformation:DescribeStacks
+            Resource: "*"
+          - Sid: iamPassRole
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/CloudFormationDeploymentRole"
+          - Sid: LambdaList
+            Effect: Allow
+            Action:
+              - lambda:ListFunctions
+              - lambda:ListTags
+            Resource: "*"
+          - Sid: ListBuckets
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource:
+              - arn:aws:s3:::yopdev-teams
+              - !GetAtt AlertManagerTemplateS3.Arn
+          - Sid: TeamInfoList
+            Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - arn:aws:s3:::yopdev-teams/*
+          - Sid: PutTemplates
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+            Resource:
+              - !Join [ "/", [!GetAtt AlertManagerTemplateS3.Arn, "templates/*"] ]
+        # - AWSSecretsManagerGetSecretValuePolicy:
+        #     SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
+      # Layers:
+      #   - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicLambdaExtension:11"
