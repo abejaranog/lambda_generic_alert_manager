@@ -1,0 +1,22 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
+Resources: {% for item in API %}
+  APIgw5XXAlarm{{ API[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{API[loop.index0].ApiName }}-5XX"
+      AlarmActions:
+        - {{ API[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: {{ API[loop.index0].ApiName }}
+      EvaluationPeriods: 1
+      MetricName: 5XXError
+      Namespace: AWS/ApiGateway
+      Period: 60
+      Statistic: Sum
+      Threshold: '1'
+
+  {% endfor %}

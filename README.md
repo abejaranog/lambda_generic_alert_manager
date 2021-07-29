@@ -1,7 +1,7 @@
 Alert Manager Lambda
 ==============================================================================
 
-This lambda can detect all DLQ and Lambda in AWS Account that it is deployed and create a Cloudformation template based in jinja to alert it to different Response Plans.
+This lambda can detect all resources availables in AWS Account that it is deployed and create a Cloudformation template based in jinja to alert it to different Response Plans.
 
 ## Prerequisites (on your computer or build server):
 
@@ -16,7 +16,7 @@ This lambda can detect all DLQ and Lambda in AWS Account that it is deployed and
 
 Clone this project onto your hard drive:
 
-    git clone git@github.com:abejaranog/lambda_generic_alert_manager.git
+    git clone codecommit::us-west-2://yopdev-alerting-manager
 
 Make whatever other changes are necessary, then push:
 
@@ -29,7 +29,8 @@ Make whatever other changes are necessary, then push:
 ## Project layout
 
 Source code for your lambda function is in the `api` directory.
-Here is the code `lambda.py` and requirements file.
+Modules folder contains the resource modules with the alerting function for each module. To alert a different kind of resource, it's necessary to create a module named <resource>.py following the structure in the other modules and import it in main function.
+Also here is the main code `alerting.py` and requirements file.
 
 Jinja alerting templates are in `api/templates`.
 

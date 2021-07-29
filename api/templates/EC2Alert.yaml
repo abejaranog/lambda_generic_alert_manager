@@ -1,0 +1,38 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
+Resources: {% for item in EC2 %}
+  EC2CPUAlarm{{ EC2[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{EC2[loop.index0].InstanceId }}-CPU"
+      AlarmActions:
+        - {{ EC2[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: InstanceId
+          Value: {{ EC2[loop.index0].InstanceId }}
+      EvaluationPeriods: 3
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: 60
+      Statistic: Average
+      Threshold: '80'
+
+  EC2StatusAlarm{{ EC2[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ EC2loop.index0.InstanceId }}-StatusCheck"
+      AlarmActions:
+        - {{ EC2[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: InstanceId
+          Value: {{ EC2[loop.index0].InstanceId}}
+      EvaluationPeriods: 15
+      MetricName: StatusCheckFailed_System
+      Namespace: AWS/EC2
+      Period: 60
+      Statistic: Count
+      Threshold: '0'
+  {% endfor %}

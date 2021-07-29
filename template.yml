@@ -57,6 +57,7 @@ Resources:
             Resource: 
             - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/DLQ-alerting-stack/*'
             - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/Lambda-alerting-stack/*'
+            - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/CPU-alerting-stack/*'
           - Sid: CloudformationValidate
             Effect: Allow
             Action:
@@ -95,6 +96,17 @@ Resources:
               - s3:GetObject
             Resource:
               - !Join [ "/", [!GetAtt AlertManagerTemplateS3.Arn, "templates/*"] ]
+          - Sid: GetRestAPIs
+            Effect: Allow
+            Action:
+              - apigateway:GET
+            Resource: "*" 
+          - Sid: GetEc2Data
+            Effect: Allow
+            Action:
+              - ec2:DescribeTags
+              - ec2:DescribeInstances
+            Resource: "*"  
         # - AWSSecretsManagerGetSecretValuePolicy:
         #     SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
       # Layers:
