@@ -1,0 +1,55 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an RDS DB CPU"
+Resources: {% for item in RDS %}
+  RDSCPUAlarm{{ RDS[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{RDS[loop.index0].DBIdentifier }}-RDS-High-CPU"
+      AlarmActions:
+        - {{ RDS[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: {{ RDS[loop.index0].DBIdentifier }}
+      EvaluationPeriods: 3
+      MetricName: CPUUtilization
+      Namespace: AWS/RDS
+      Period: 60
+      Statistic: Average
+      Threshold: {{ RDS[loop.index0].CPUThreshold }}
+
+  RDSFreeStorageAlarm{{ RDS[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{RDS[loop.index0].DBIdentifier }}-RDS-Low-Free-Storage"
+      AlarmActions:
+        - {{ RDS[loop.index0].ResponseARN }}
+      ComparisonOperator: LessThanOrEqualToThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: {{ RDS[loop.index0].DBIdentifier }}
+      EvaluationPeriods: 3
+      MetricName: FreeStorageSpace
+      Namespace: AWS/RDS
+      Period: 60
+      Statistic: Average
+      Threshold: {{ RDS[loop.index0].StorageThreshold }}
+
+  RDSBurstBalanceAlarm{{ RDS[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{RDS[loop.index0].DBIdentifier }}-RDS-Low-Burst-Balance"
+      AlarmActions:
+        - {{ RDS[loop.index0].ResponseARN }}
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: {{ RDS[loop.index0].DBIdentifier }}
+      EvaluationPeriods: 3
+      MetricName: BurstBalance
+      Namespace: AWS/RDS
+      Period: 60
+      Statistic: Average
+      Threshold: {{ RDS[loop.index0].BurstThreshold }}
+  {% endfor %}

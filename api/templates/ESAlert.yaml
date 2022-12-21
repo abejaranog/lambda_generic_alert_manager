@@ -1,0 +1,324 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
+Resources: {% for item in ES %}
+  ESClusterStatusRed{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ES[loop.index0].DomainName }}-ClusterStatus-red"
+      AlarmDescription: 'Alert when ClusterStatus.red >=1, within 1 minute during 1 consecutive times'
+      Namespace: AWS/ES
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      Statistic: Maximum
+      MetricName: ClusterStatus.red
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ESClusterStatusYellow{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ES[loop.index0].DomainName }}-ClusterStatus-yellow"
+      AlarmDescription: 'Alert when ClusterStatus.yellow >=1, within 1 minute during 5 consecutive times'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'ClusterStatus.yellow'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 60
+      EvaluationPeriods: 5
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  FreeStorageSpace{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ES[loop.index0].DomainName }}-FreeStorageSpace"
+      AlarmDescription: 'Alert when FreeStorageSpace <= 20480, within 1 minute during 1 consecutive time'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Minimum
+      MetricName: 'FreeStorageSpace'
+      ComparisonOperator: LessThanOrEqualToThreshold
+      Threshold: 20480
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ClusterIndexWritesBlocked{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-ClusterIndexWritesBlocked'
+      AlarmDescription: 'Alert when ClusterIndexWritesBlocked >=1, 1 time within 5 minutes'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'ClusterIndexWritesBlocked'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 300
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  AutomatedSnapshotFailure{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-AutomatedSnapshotFailure'
+      AlarmDescription: 'Alert when AutomatedSnapshotFailure >=1, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'AutomatedSnapshotFailure'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  CPUUtilization{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-CPUUtilization'
+      AlarmDescription: 'Alert when CPUUtilization >=80, 3 time within 15 minutes'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'CPUUtilization'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 80
+      Period: 900
+      EvaluationPeriods: 3
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  JVMMemoryPressure{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-JVMMemoryPressure'
+      AlarmDescription: 'Alert when JVMMemoryPressure >= 80 (old gen instance) / 95 (current gen instance), 3 time within 5 minutes'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'JVMMemoryPressure'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 95
+      Period: 300
+      EvaluationPeriods: 3
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  MasterCPUUtilization{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-MasterCPUUtilization'
+      AlarmDescription: 'Alert when MasterCPUUtilization >= 50, 3 time within 15 minutes'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'MasterCPUUtilization'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 50
+      Period: 900
+      EvaluationPeriods: 3
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  MasterJVMMemoryPressure{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-MasterJVMMemoryPressure'
+      AlarmDescription: 'Alert when MasterJVMMemoryPressure >= 80 (old gen instance) / 95 (current gen instance), 1 time within 15 minutes'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'MasterJVMMemoryPressure'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 95
+      Period: 900
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  KMSKeyError{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-KMSKeyError'
+      AlarmDescription: 'Alert when KMSKeyError >= 1, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'KMSKeyError'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  KMSKeyInaccessible{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-KMSKeyInaccessible'
+      AlarmDescription: 'Alert when KMSKeyInaccessible >= 1, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'KMSKeyInaccessible'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ShardsActive{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-ShardsActive'
+      AlarmDescription: 'Alert when ShardsActive >= 30000, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'Shards.active'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 30000
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  MasterReachableFromNode{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-MasterReachableFromNode'
+      AlarmDescription: 'Alert when MasterReachableFromNode < 1, 1 time within 1 day'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'MasterReachableFromNode'
+      ComparisonOperator: LessThanThreshold
+      Threshold: 1
+      Period: 86400
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ThreadpoolWriteQueue{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-ThreadpoolWriteQueue'
+      AlarmDescription: 'Alert when average ThreadpoolWriteQueue >= 100, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Average
+      MetricName: 'ThreadpoolWriteQueue'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 100
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ThreadpoolSearchQueue500{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-ThreadpoolSearchQueue500'
+      AlarmDescription: 'Alert when average ThreadpoolSearchQueue >= 500, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Average
+      MetricName: 'ThreadpoolSearchQueue'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 500
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  ThreadpoolSearchQueue5000{{ ES[loop.index0].AlarmName }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: '{{ ES[loop.index0].AlarmName }}-ThreadpoolSearchQueue5000'
+      AlarmDescription: 'Alert when ThreadpoolSearchQueue >= 5000, 1 time within 1 minute'
+      Namespace: 'AWS/ES'
+      Dimensions:
+        - Name: ClientId
+          Value: !Ref AWS::AccountId
+        - Name: DomainName
+          Value: {{ ES[loop.index0].DomainName }}
+      # Conditions
+      Statistic: Maximum
+      MetricName: 'ThreadpoolSearchQueue'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 5000
+      Period: 60
+      EvaluationPeriods: 1
+      AlarmActions:
+        - {{ ES[loop.index0].ResponseARN }}
+  {% endfor %}

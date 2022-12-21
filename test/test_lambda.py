@@ -5,14 +5,15 @@ import pytest
 from subprocess import call
 sys.path.append(
     os.path.normpath(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "api")
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "api/modules")
     )
 )
 with moto.mock_sts():
-    import alerting
+    import common
 
 # Environment
-templateEnv = Environment(loader=FileSystemLoader("./templates"))
+templateEnv = Environment(loader=FileSystemLoader("./templates"), autoescape=True)
+test_template = "TestTemplate.yaml"
 template_base = """---
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
@@ -37,7 +38,7 @@ Resources:
   """
 # Tests
 def test_render_template_ok():
-    template = alerting.render_template("TestTemplate.yaml", {"Test": ["TestName"]})
+    template = common.render_template(test_template, {"Test": ["TestName"]})
     assert template == template_base
 
 @pytest.mark.filterwarnings("ignore:Tried to parse AWS::")
@@ -50,11 +51,11 @@ def test_check_existent_stack():
     }
     cfn.create_stack(**kwargs)
 
-    assert alerting.check_stack("true_stack") == True
+    assert common.check_stack("true_stack") == True
 
 @moto.mock_cloudformation
 def test_check_non_existent_stack():
-    assert alerting.check_stack("non-existent-stack") == False
+    assert common.check_stack("non-existent-stack") == False
 
 @pytest.mark.filterwarnings("ignore:Tried to parse AWS::")
 @moto.mock_cloudformation
@@ -62,13 +63,13 @@ def test_check_non_existent_stack():
 def test_deploy_cfn_ok(monkeypatch):
     monkeypatch.setenv('TEMPLATE_S3', 'test-bucket')
     with moto.mock_sts():
-        reload(alerting)
+        reload(common)
 
     conn = boto3.resource('s3', region_name='us-east-1')
     conn.create_bucket(Bucket="test-bucket")
-    template = alerting.render_template("TestTemplate.yaml", {"Test": ["TestName"]})
+    template = common.render_template(test_template, {"Test": ["TestName"]})
 
-    assert alerting.deploy_cfn(template, "TestTemplate") == 201
+    assert common.deploy_cfn(template, "TestTemplate") == 201
     call('rm -rf file.tmp', shell=True)
 
 @moto.mock_s3
@@ -76,12 +77,12 @@ def test_deploy_cfn_ok(monkeypatch):
 def test_deploy_cfn_fail(monkeypatch):
     monkeypatch.setenv('TEMPLATE_S3', 'test-bucket')
     with moto.mock_sts():
-        reload(alerting)
+        reload(common)
 
     conn = boto3.resource('s3', region_name='us-east-1')
     conn.create_bucket(Bucket="test-bucket")
-    empty_template = alerting.render_template("TestTemplate.yaml", {})
+    empty_template = common.render_template(test_template, {})
     
-    assert alerting.deploy_cfn(empty_template, "TestTemplate") == 400
+    assert common.deploy_cfn(empty_template, "TestTemplate") == 400
     call('rm -rf file.tmp', shell=True)
 

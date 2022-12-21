@@ -1,5 +1,7 @@
 .aws-sam*
-.venv*
+*.venv*
 *__pycache*
 *.pytest*
 *file.tmp
+*.scannerwork*
+*.iml

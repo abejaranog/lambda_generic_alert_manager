@@ -29,7 +29,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.dlq"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -44,10 +44,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.dlq"
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -112,18 +109,12 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
 
   LambdaAlertManager:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.lambdaf"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -138,10 +129,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.lambdaf"
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -197,18 +185,12 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
 
   APIgwAlertManager:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.apigw"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -223,10 +205,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.apigw"
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -281,18 +260,12 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
 
   EC2AlertManager:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.ec2"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -307,10 +280,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.ec2" 
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -366,103 +336,12 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
-
-  ESAlertManager:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
-      Runtime: python3.8
-      MemorySize: 256
-      Timeout: 300
-      Events:
-        CheckAlarmsScheduledEvent:
-          Type: Schedule
-          Properties:
-            Schedule: rate(30 minutes)
-      DeadLetterQueue:
-        Type: SQS
-        TargetArn: !GetAtt AlertManagerDeadLetterQueue.Arn
-      Environment:
-        Variables:
-          LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.es"
-          TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
-          API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
-      Policies:
-        - Statement:
-          - Sid: CloudformationCreate
-            Effect: Allow
-            Action:
-            - cloudformation:CreateStack
-            - cloudformation:UpdateStack
-            - cloudformation:ListStackResources
-            Resource: 
-            - !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/ES-alerting-stack/*'
-          - Sid: CloudformationValidate
-            Effect: Allow
-            Action:
-            - cloudformation:ValidateTemplate
-            - cloudformation:ListStacks
-            - cloudformation:DescribeStacks
-            Resource: "*"
-          - Sid: iamPassRole
-            Effect: Allow
-            Action:
-            - iam:PassRole
-            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/CloudFormationDeploymentRole"
-          - Sid: ListBuckets
-            Effect: Allow
-            Action:
-              - s3:ListBucket
-            Resource:
-              - !GetAtt AlertManagerTemplateS3.Arn
-          - Sid: PutTemplates
-            Effect: Allow
-            Action:
-              - s3:PutObject
-              - s3:GetObject
-            Resource:
-              - !Join [ "/", [!GetAtt AlertManagerTemplateS3.Arn, "templates/*"] ]
-          - Sid: GetESData
-            Effect: Allow
-            Action:
-              - es:Describe*
-              - es:List*
-            Resource: "*"
-          - Sid: TagResources
-            Effect: Allow
-            Action:
-              - cloudwatch:TagResource
-            Resource:
-              - !Sub 'arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:*'
-          - Sid: TagResourcesAPI
-            Effect: Allow
-            Action:
-              - tag:TagResources
-            Resource:
-              - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
 
   RDSAlertManager:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.rds"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -477,10 +356,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.rds"
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -536,18 +412,12 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"
   
   ASGAlertManager:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: "api"
-      Handler: "newrelic_lambda_wrapper.handler"
+      Handler: "alerting.asg"
       Runtime: python3.8
       MemorySize: 256
       Timeout: 300
@@ -562,10 +432,7 @@ Resources:
       Environment:
         Variables:
           LOG_LEVEL: "INFO"
-          TEMPLATE_S3: !Ref AlertManagerTemplateS3
-          NEW_RELIC_ACCOUNT_ID: 902679 
-          NEW_RELIC_EXTENSION_SEND_FUNCTION_LOGS: true 
-          NEW_RELIC_LAMBDA_HANDLER: "alerting.asg"
+          TEMPLATE_S3: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
           TEAMS_API_URL: !FindInMap [ Config, !Ref EnvironmentStackName, TeamsAPIEndPoint ]
           API_SECRET_NAME: !FindInMap [ Config, !Ref EnvironmentStackName, SecretName ]
       Policies:
@@ -621,9 +488,3 @@ Resources:
               - tag:TagResources
             Resource:
               - '*'
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:NEW_RELIC_LICENSE_KEY*"
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:Teams*"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:451483290750:layer:NewRelicPython38:75"

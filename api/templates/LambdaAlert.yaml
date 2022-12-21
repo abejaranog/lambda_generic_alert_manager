@@ -5,7 +5,7 @@ Resources: {% for item in lambda %}
   LambdaErrorAlarm{{ lambda[loop.index0].id }}:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "{{ lambda[loop.index0].LambdaName }}-LambdaErrors"
+      AlarmName: "{{ lambda[loop.index0].LambdaName }}-Lambda-Errors"
       AlarmActions:
         - {{ lambda[loop.index0].ResponseARN }}
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -17,6 +17,22 @@ Resources: {% for item in lambda %}
       Namespace: AWS/Lambda
       Period: 60
       Statistic: Sum
-      Threshold: '1'
+      Threshold: {{ lambda[loop.index0].ErrorThreshold }}
 
+  LambdaThrottlesAlarm{{ lambda[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ lambda[loop.index0].LambdaName }}-Lambda-Throttles"
+      AlarmActions:
+        - {{ lambda[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: {{ lambda[loop.index0].LambdaName }}
+      EvaluationPeriods: 1
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: {{ lambda[loop.index0].ThrottlingThreshold }}
   {% endfor %}

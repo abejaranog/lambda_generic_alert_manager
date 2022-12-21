@@ -5,7 +5,7 @@ Resources: {% for item in EC2 %}
   EC2CPUAlarm{{ EC2[loop.index0].id }}:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "{{EC2[loop.index0].InstanceId }}-CPU"
+      AlarmName: "{{ EC2[loop.index0].InstanceId }}-EC2-High-CPU"
       AlarmActions:
         - {{ EC2[loop.index0].ResponseARN }}
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -17,12 +17,12 @@ Resources: {% for item in EC2 %}
       Namespace: AWS/EC2
       Period: 60
       Statistic: Average
-      Threshold: '80'
+      Threshold: {{ EC2[loop.index0].CPUThreshold }}
 
   EC2StatusAlarm{{ EC2[loop.index0].id }}:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "{{ EC2loop.index0.InstanceId }}-StatusCheck"
+      AlarmName: "{{EC2[loop.index0].InstanceId }}-EC2-StatusCheck-Error"
       AlarmActions:
         - {{ EC2[loop.index0].ResponseARN }}
       ComparisonOperator: GreaterThanThreshold
@@ -33,6 +33,42 @@ Resources: {% for item in EC2 %}
       MetricName: StatusCheckFailed_System
       Namespace: AWS/EC2
       Period: 60
-      Statistic: Count
-      Threshold: '0'
+      Statistic: SampleCount
+      Threshold: {{ EC2[loop.index0].StatusThreshold }}
+  {% endfor %}
+  {% for item in EC2Alerts.RAM %}
+  EC2RAMAlarm{{ EC2Alerts.RAM[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ EC2Alerts.RAM[loop.index0].InstanceId }}-EC2-High-RAM-Usage"
+      AlarmActions:
+        - {{ EC2Alerts.RAM[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: InstanceId
+          Value: {{ EC2Alerts.RAM[loop.index0].InstanceId }}
+      EvaluationPeriods: 3
+      MetricName: mem_used_percent
+      Namespace: custom/EC2
+      Period: 60
+      Statistic: Average
+      Threshold: {{ EC2Alerts.RAM[loop.index0].Threshold }}
+  {% endfor %}
+  {% for item in EC2Alerts.Disk %}
+  EC2DiskAlarm{{ EC2Alerts.Disk[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ EC2Alerts.Disk[loop.index0].InstanceId }}-EC2-High-Disk-Usage"
+      AlarmActions:
+        - {{ EC2Alerts.Disk[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: InstanceId
+          Value: {{ EC2Alerts.Disk[loop.index0].InstanceId }}
+      EvaluationPeriods: 3
+      MetricName: disk_used_percent
+      Namespace: custom/EC2
+      Period: 60
+      Statistic: Average
+      Threshold: {{ EC2Alerts.Disk[loop.index0].Threshold }}
   {% endfor %}

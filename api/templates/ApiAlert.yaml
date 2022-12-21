@@ -5,18 +5,18 @@ Resources: {% for item in API %}
   APIgw5XXAlarm{{ API[loop.index0].id }}:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "{{API[loop.index0].ApiName }}-5XX"
+      AlarmName: "{{API[loop.index0].ApiName }}-APIGateway-5XX-Errors"
       AlarmActions:
         - {{ API[loop.index0].ResponseARN }}
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
-        - Name: FunctionName
+        - Name: ApiName
           Value: {{ API[loop.index0].ApiName }}
       EvaluationPeriods: 1
       MetricName: 5XXError
       Namespace: AWS/ApiGateway
       Period: 60
       Statistic: Sum
-      Threshold: '1'
+      Threshold: {{ API[loop.index0].threshold }}
 
   {% endfor %}

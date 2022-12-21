@@ -1,0 +1,21 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation Sample Template to alarm an application-sam model"
+Resources: {% for item in ASG %}
+  ASGCPUAlarm{{ ASG[loop.index0].id }}:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "{{ ASG[loop.index0].ASGName }}-AutoScaling-High-CPU"
+      AlarmActions:
+        - {{ ASG[loop.index0].ResponseARN }}
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: {{ ASG[loop.index0].ASGName }}
+      EvaluationPeriods: 3
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: 60
+      Statistic: Average
+      Threshold: {{ ASG[loop.index0].threshold }}
+  {% endfor %}

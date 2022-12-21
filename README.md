@@ -24,12 +24,18 @@ Make whatever other changes are necessary, then push:
 
 ## Project Diagram
 
-![Diagram](./diagram/alert-manager.png)
+Global project diagram
+
+![Diagram](./diagram/IncidentManager.png)
+
+Lambda individual diagram
+
+![Lambda](./diagram/alert-manager.png)
 
 ## Project layout
 
 Source code for your lambda function is in the `api` directory.
-Modules folder contains the resource modules with the alerting function for each module. To alert a different kind of resource, it's necessary to create a module named <resource>.py following the structure in the other modules and import it in main function.
+Modules folder contains the resource modules with the alerting function for each module. To alert a different kind of resource, it's necessary to create a module named <resource>.py following the structure in the other modules and import it in `alerting` function and add to template as new lambda function.
 Also here is the main code `alerting.py` and requirements file.
 
 Jinja alerting templates are in `api/templates`.
@@ -37,7 +43,6 @@ Jinja alerting templates are in `api/templates`.
 `template.yml` contains SAM template to deploy it.
 
 ## Testing
-**Under construction**
 
 Using pytest for testing [PyTest](https://docs.pytest.org/en/6.2.x/)
 
@@ -64,8 +69,7 @@ test_lambda.py .                                                                
 ========================================================================== 1 passed in 2.00s ===========================================================================
 ```
 
-
 NOTE: Is strongly recommended to use a test **VirtualEnv**.
 
 
-
+To test lambda local invoking, you need to use *template_local.yml* to build, because original template has New Relic Connections that Sam local can't handle.

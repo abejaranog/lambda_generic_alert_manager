@@ -1,25 +1,19 @@
 import boto3
-import os
 import logging
 from uuid_by_string import generate_uuid
-from modules.common import deploy_cfn, render_template, load_teams
+from modules.common import deploy_cfn, render_template, call_teams, init_logger, tag_resources, AWS_REGION, AWS_ACCOUNT, RP_ARN_BASE
 
-# Environment
-LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-AWS_REGION = os.environ.get("AWS_REGION")
-AWS_ACCOUNT = boto3.client("sts").get_caller_identity()["Account"]
-sqs_client = boto3.client("sqs", region_name=AWS_REGION)
-sqs_collection = boto3.resource("sqs")
-lambda_client = boto3.client("lambda", region_name=AWS_REGION)
-logging.getLogger().setLevel(logging.getLevelName(LOG_LEVEL))
-
-
-def DLQalert():
+def dlq_alert():
+    thresholds = {
+        "qa": 5,
+        "prod": 1
+    }
+    sqs_client = boto3.client("sqs", region_name=AWS_REGION)
+    sqs_collection = boto3.resource("sqs")
+    lambda_client = boto3.client("lambda", region_name=AWS_REGION)
     dlq_list = []
     dlq = []
-    teams = load_teams()
-    if teams == 403:
-        return 403
+    init_logger()
 
     if list(sqs_collection.queues.all()):
         sqs_list = []
@@ -30,13 +24,13 @@ def DLQalert():
         return 404
 
     for queue in sqs_list:
-        queueArn = sqs_client.get_queue_attributes(
+        queue_arn = sqs_client.get_queue_attributes(
             QueueUrl=queue, AttributeNames=["QueueArn"]
         )["Attributes"]["QueueArn"]
         if "queueUrls" in sqs_client.list_dead_letter_source_queues(QueueUrl=queue):
-            dlq_list.append(queueArn)
+            dlq_list.append(queue_arn)
         else:
-            logging.debug(f"SQS: {queueArn} does not have DLQ associated")
+            logging.debug(f"SQS: {queue_arn} does not have DLQ associated")
 
     if "Functions" in lambda_client.list_functions():
         paginator = lambda_client.get_paginator("list_functions")
@@ -59,35 +53,41 @@ def DLQalert():
 
     dlq_list = sorted(
         list(set(dlq_list))
-    ) 
+    )
+
+    teams = call_teams("Teams")
+
     for item in dlq_list:
-        queueName = item.replace(f"arn:aws:sqs:{AWS_REGION}:{AWS_ACCOUNT}:", "")
-        queueUrl = sqs_client.get_queue_url(QueueName=queueName)["QueueUrl"]
-        if "Tags" in sqs_client.list_queue_tags(QueueUrl=queueUrl):
-            tags = sqs_client.list_queue_tags(QueueUrl=queueUrl)["Tags"]
+        queue_name = item.replace(f"arn:aws:sqs:{AWS_REGION}:{AWS_ACCOUNT}:", "")
+        queue_url = sqs_client.get_queue_url(QueueName=queue_name)["QueueUrl"]
+        if "Tags" in sqs_client.list_queue_tags(QueueUrl=queue_url):
+            tags = sqs_client.list_queue_tags(QueueUrl=queue_url)["Tags"]
         else:
             logging.warning(f"Queue: {item} does not have tags")
             tags = {}
 
         if "Owner" in tags:
             if 'snooze_alert' in tags:
-                logging.warning(f"DLQ {queueName} is snoozed")
-                continue
-            elif tags["Owner"] in teams and teams[tags["Owner"]].get("DLQ"):
+                logging.warning(f"DLQ {queue_name} is snoozed")
+            elif tags["Owner"] in teams:
                 dlq_item = {
-                    "QueueName": queueName,
-                    "ResponseARN": teams[tags["Owner"]]["DLQ"],
+                    "QueueName": queue_name,
+                    "ResponseARN": f"{RP_ARN_BASE}{tags['Owner']}-Alert",
                     "tags": tags,
-                    "id": generate_uuid(queueName)[:8],
+                    "id": generate_uuid(queue_name)[:8],
+                    "threshold": thresholds[tags.get("Environment", "prod")]
                 }
                 dlq.append(dlq_item)
+            else:
+                logging.warning(f"Team {tags['Owner']} was not found on teams api")
         else:
-            logging.warning(f"DLQ {queueName} has not Owner or DLQ Response Plan")
+            logging.warning(f"DLQ {queue_name} has not Owner tag")
 
     logging.info("DLQ List to Alert: " + str(dlq))
-    renderedTemplate = render_template("DLQalert.yaml", {"DLQ": dlq})
-    if renderedTemplate:
-        response = deploy_cfn(renderedTemplate, "DLQ-alerting-stack")
+    rendered_template = render_template("DLQalert.yaml", {"DLQ": dlq})
+    if rendered_template:
+        response = deploy_cfn(rendered_template, "DLQ-alerting-stack")
+        tag_resources("DLQ-alerting-stack")
         return response
     else:
         logging.info("Cloudformation template can't be rendered")

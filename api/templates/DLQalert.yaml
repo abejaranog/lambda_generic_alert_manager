@@ -5,7 +5,7 @@ Resources: {% for item in DLQ %}
   DLQAlarm{{ DLQ[loop.index0].id }}:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: "{{ DLQ[loop.index0].QueueName }}-VisibleMessagesAlert"
+      AlarmName: "{{ DLQ[loop.index0].QueueName }}-DLQ-Visible-Messages"
       AlarmActions:
         - {{ DLQ[loop.index0].ResponseARN }}
       ComparisonOperator: GreaterThanOrEqualToThreshold
@@ -17,6 +17,6 @@ Resources: {% for item in DLQ %}
       Namespace: AWS/SQS
       Period: 60
       Statistic: Average
-      Threshold: '1'
+      Threshold: {{ DLQ[loop.index0].threshold }}
 
   {% endfor %}
