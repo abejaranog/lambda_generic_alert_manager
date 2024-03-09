@@ -8,11 +8,11 @@ Parameters:
 Mappings:
   Config:
     qa:
-      TeamsAPIEndPoint: "https://ex5n1m4x7g.execute-api.us-west-2.amazonaws.com/prod/v1/"
+      TeamsAPIEndPoint: ""
       DevopsAccountNumber: 267277279063
       SecretName: "Teams/prod/ApiKey"
     prod:
-      TeamsAPIEndPoint: "https://ex5n1m4x7g.execute-api.us-west-2.amazonaws.com/prod/v1/"
+      TeamsAPIEndPoint: ""
       DevopsAccountNumber: 932113703644
       SecretName: "Teams/prod/ApiKey"
 
@@ -23,7 +23,7 @@ Resources:
   AlertManagerTemplateS3:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "yopdev-alerting-templates-${AWS::AccountId}-${AWS::Region}"
+      BucketName: !Sub "alerting-templates-${AWS::AccountId}-${AWS::Region}"
 
   DLQAlertManager:
     Type: AWS::Serverless::Function
