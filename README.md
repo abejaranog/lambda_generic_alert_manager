@@ -16,7 +16,7 @@ This lambda can detect all resources availables in AWS Account that it is deploy
 
 Clone this project onto your hard drive:
 
-    git clone codecommit::us-west-2://yopdev-alerting-manager
+    git clone 
 
 Make whatever other changes are necessary, then push:
 
